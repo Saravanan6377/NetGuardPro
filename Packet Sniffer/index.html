@@ -1,0 +1,2486 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetGuard Pro - Advanced Network Monitor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --danger: #f72585;
+            --dark: #1a1a2e;
+            --darker: #0d0d1a;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --border: rgba(255, 255, 255, 0.1);
+            --card-bg: rgba(30, 30, 46, 0.7);
+            --sidebar-width: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: var(--light);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            line-height: 1.5;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: rgba(13, 13, 26, 0.95);
+            backdrop-filter: blur(15px);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 1.75rem 1.25rem;
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            margin-bottom: 2.75rem;
+            padding: 0 0.5rem;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: white;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.4);
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--primary), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-menu {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 0.625rem;
+            position: relative;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--light);
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: rgba(67, 97, 238, 0.2);
+            color: var(--light);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            border-left: 3px solid var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .alert-badge {
+            background: linear-gradient(45deg, var(--warning), var(--danger));
+            color: white;
+            font-size: 0.8rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 10px;
+            margin-left: auto;
+            font-weight: 600;
+            box-shadow: 0 0 10px rgba(247, 37, 133, 0.5);
+            animation: pulse-badge 2s infinite;
+        }
+
+        @keyframes pulse-badge {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            padding: 1.25rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-top: auto;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ffa500;
+            transition: all 0.3s ease;
+        }
+
+        .status-indicator.connected {
+            background: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+            animation: pulse-connected 2s infinite;
+        }
+
+        .status-indicator.disconnected {
+            background: #ff4444;
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.6);
+        }
+
+        .status-indicator.error {
+            background: #ff4444;
+            animation: pulse-error 1s infinite;
+        }
+
+        @keyframes pulse-connected {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes pulse-error {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1);
+            }
+        }
+
+        .status-text {
+            flex: 1;
+        }
+
+        .status-title {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            font-weight: 500;
+        }
+
+        .status-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(10, 10, 20, 0.4);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            width: calc(100vw - var(--sidebar-width));
+        }
+
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(13, 13, 26, 0.8);
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-left h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 0.375rem;
+            background: linear-gradient(45deg, var(--light), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            opacity: 0.7;
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            padding: 0.625rem 1.25rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: pulse-live 1.5s infinite;
+            box-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
+        }
+
+        @keyframes pulse-live {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.6;
+                transform: scale(1.2);
+            }
+        }
+
+        .time-display {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            font-family: 'Courier New', monospace;
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+            padding: 1.75rem;
+            flex-shrink: 0;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border-color: rgba(67, 97, 238, 0.5);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-icon {
+            font-size: 1.4rem;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.375rem;
+            font-family: 'Courier New', monospace;
+            letter-spacing: -1px;
+        }
+
+        .stat-change,
+        .stat-percentage {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            font-weight: 500;
+        }
+
+        .stat-card.total .stat-value {
+            color: var(--success);
+        }
+
+        .stat-card.tcp .stat-value {
+            color: #8a5fff;
+        }
+
+        .stat-card.udp .stat-value {
+            color: #00ff88;
+        }
+
+        .stat-card.icmp .stat-value {
+            color: #ffa500;
+        }
+
+        /* Analytics Grid */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.75rem;
+            padding: 0 1.75rem;
+            margin-bottom: 1.75rem;
+            flex-shrink: 0;
+        }
+
+        .analytics-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            min-height: 300px;
+        }
+
+        .analytics-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            font-weight: 600;
+        }
+
+        .analytics-card h3 i {
+            color: var(--primary);
+        }
+
+        .chart-container {
+            flex: 1;
+            position: relative;
+            height: 220px;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 1.75rem;
+            padding: 0 1.75rem 1.75rem;
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .section-header h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            letter-spacing: -0.3px;
+        }
+
+        .section-header h3 i {
+            color: var(--primary);
+        }
+
+        .section-controls {
+            display: flex;
+            gap: 0.625rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .alert-controls {
+            display: flex;
+            gap: 0.625rem;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            font-weight: 500;
+        }
+
+        .control-btn:hover {
+            background: rgba(67, 97, 238, 0.3);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .control-btn.paused {
+            background: rgba(255, 68, 68, 0.3);
+            border-color: var(--danger);
+        }
+
+        .control-btn.small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+        }
+
+        .search-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.625rem 1.25rem;
+            color: white;
+            font-size: 0.85rem;
+            width: 220px;
+            transition: all 0.3s ease;
+            font-weight: 400;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(67, 97, 238, 0.3);
+        }
+
+        .search-box::placeholder {
+            color: var(--gray);
+        }
+
+        /* Packet Log */
+        .packet-log-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .log-container {
+            flex: 1;
+            overflow: auto;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        #packet-log,
+        #logs-packet-log {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+            font-size: 0.85rem;
+        }
+
+        #packet-log thead,
+        #logs-packet-log thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        #packet-log thead th,
+        #logs-packet-log thead th {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 1rem 1.25rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.3s ease;
+            user-select: none;
+            position: sticky;
+            top: 0;
+        }
+
+        #packet-log thead th:hover,
+        #logs-packet-log thead th:hover {
+            background: rgba(67, 97, 238, 0.2);
+        }
+
+        #packet-log tbody td,
+        #logs-packet-log tbody td {
+            padding: 0.875rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            white-space: nowrap;
+            font-weight: 400;
+        }
+
+        #packet-log tbody tr,
+        #logs-packet-log tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        #packet-log tbody tr:hover,
+        #logs-packet-log tbody tr:hover {
+            background: rgba(67, 97, 238, 0.1);
+        }
+
+        .new-row {
+            background: rgba(0, 255, 136, 0.1) !important;
+            animation: highlightFade 1.5s ease-out;
+        }
+
+        @keyframes highlightFade {
+            0% {
+                background: rgba(0, 255, 136, 0.3) !important;
+                box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+            }
+
+            100% {
+                background: rgba(0, 255, 136, 0.1) !important;
+                box-shadow: none;
+            }
+        }
+
+        .protocol-badge {
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .protocol-badge.tcp {
+            background: rgba(138, 95, 255, 0.2);
+            color: #8a5fff;
+            border: 1px solid rgba(138, 95, 255, 0.3);
+        }
+
+        .protocol-badge.udp {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .protocol-badge.icmp {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+            border: 1px solid rgba(255, 165, 0, 0.3);
+        }
+
+        .time-cell {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .ip-cell {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .size-cell {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+        }
+
+        .type-cell {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* Alerts Section */
+        .alerts-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        #alert-filter,
+        #alerts-tab-filter {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 0.625rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            min-width: 140px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        #alert-filter:focus,
+        #alerts-tab-filter:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(67, 97, 238, 0.3);
+        }
+
+        .alerts-container {
+            flex: 1;
+            overflow: auto;
+        }
+
+        .no-alerts {
+            text-align: center;
+            padding: 2.5rem 1.25rem;
+            opacity: 0.6;
+        }
+
+        .no-alerts-icon {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+            color: var(--success);
+        }
+
+        .no-filtered-alerts {
+            text-align: center;
+            padding: 2.5rem;
+            opacity: 0.6;
+            font-style: italic;
+        }
+
+        .alerts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .alert-item {
+            background: rgba(247, 37, 133, 0.1);
+            border-left: 4px solid var(--warning);
+            border-radius: 10px;
+            padding: 1.25rem;
+            animation: slideIn 0.3s ease-out;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .alert-item:hover {
+            background: rgba(247, 37, 133, 0.15);
+            transform: translateX(5px);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .alert-item.severity-high {
+            border-left-color: var(--danger);
+            background: rgba(247, 37, 133, 0.15);
+        }
+
+        .alert-item.severity-medium {
+            border-left-color: #ffa500;
+            background: rgba(255, 165, 0, 0.1);
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .alert-type {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .alert-item.severity-high .alert-type {
+            color: var(--danger);
+        }
+
+        .alert-item.severity-medium .alert-type {
+            color: #ffa500;
+        }
+
+        .alert-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+        }
+
+        .alert-message {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            line-height: 1.4;
+            font-weight: 400;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: rgba(0, 255, 136, 0.9);
+            color: white;
+            padding: 1.25rem 1.75rem;
+            border-radius: 10px;
+            z-index: 1000;
+            animation: slideInNotification 0.3s ease-out;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            max-width: 420px;
+            font-weight: 500;
+        }
+
+        .notification.error {
+            background: rgba(247, 37, 133, 0.9);
+        }
+
+        @keyframes slideInNotification {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Demo Mode Indicator */
+        .demo-mode {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: rgba(255, 165, 0, 0.9);
+            color: white;
+            padding: 0.625rem 1.25rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Settings Styles */
+        .settings-group {
+            margin-bottom: 2.5rem;
+        }
+
+        .settings-group h4 {
+            font-size: 1.1rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .setting-item label {
+            font-weight: 500;
+        }
+
+        .setting-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        .setting-item select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            min-width: 120px;
+            font-weight: 500;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr auto;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .alerts-section {
+                height: 350px;
+            }
+
+            .search-box {
+                width: 180px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                padding: 1.25rem;
+                overflow-x: auto;
+            }
+
+            .nav-menu {
+                display: flex;
+                flex-direction: row;
+                gap: 0.625rem;
+                overflow-x: auto;
+            }
+
+            .nav-item {
+                white-space: nowrap;
+                min-width: fit-content;
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                padding: 1.25rem;
+                gap: 1.25rem;
+            }
+
+            .content-grid {
+                padding: 0 1.25rem 1.25rem;
+                gap: 1.25rem;
+            }
+
+            .analytics-grid {
+                padding: 0 1.25rem;
+                gap: 1.25rem;
+            }
+
+            .top-header {
+                padding: 1.25rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.625rem;
+            }
+
+            .header-right {
+                align-self: flex-end;
+            }
+
+            .section-controls {
+                flex-wrap: wrap;
+                gap: 0.375rem;
+            }
+
+            .search-box {
+                width: 100%;
+                margin-bottom: 0.625rem;
+            }
+
+            .control-btn {
+                font-size: 0.75rem;
+                padding: 0.5rem 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value {
+                font-size: 1.8rem;
+            }
+
+            .sidebar {
+                padding: 0.75rem;
+            }
+
+            .logo h1 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1>NetGuard Pro</h1>
+        </div>
+
+        <nav class="nav-menu">
+            <div class="nav-item active" data-tab="dashboard">
+                <span class="nav-icon"><i class="fas fa-chart-bar"></i></span>
+                <span>Dashboard</span>
+            </div>
+            <div class="nav-item" data-tab="analytics">
+                <span class="nav-icon"><i class="fas fa-chart-pie"></i></span>
+                <span>Analytics</span>
+            </div>
+            <div class="nav-item" data-tab="alerts">
+                <span class="nav-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                <span>Security Alerts</span>
+                <span class="alert-badge" id="alert-count">0</span>
+            </div>
+            <div class="nav-item" data-tab="logs">
+                <span class="nav-icon"><i class="fas fa-clipboard-list"></i></span>
+                <span>Packet Logs</span>
+            </div>
+            <div class="nav-item" data-tab="settings">
+                <span class="nav-icon"><i class="fas fa-cog"></i></span>
+                <span>Settings</span>
+            </div>
+        </nav>
+
+        <div class="connection-status">
+            <div class="status-indicator" id="status-dot"></div>
+            <div class="status-text">
+                <div class="status-title">Connection Status</div>
+                <div class="status-value" id="status">Connecting...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <header class="top-header">
+            <div class="header-left">
+                <h2><i class="fas fa-network-wired"></i> Network Traffic Monitor</h2>
+                <p class="subtitle">Real-time packet analysis and threat detection</p>
+            </div>
+            <div class="header-right">
+                <div class="time-display" id="current-time">--:--:--</div>
+                <div class="live-indicator">
+                    <div class="pulse-dot"></div>
+                    <span>LIVE</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Tab -->
+        <div class="tab-content active" id="dashboard-tab">
+            <div class="stats-grid">
+                <div class="stat-card total">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Packets</span>
+                        <span class="stat-icon"><i class="fas fa-boxes"></i></span>
+                    </div>
+                    <div class="stat-value" id="total-packets">0</div>
+                    <div class="stat-change">
+                        <span class="stat-trend trend-up"><i class="fas fa-arrow-up"></i> +<span
+                                id="packets-per-min">0</span> this minute</span>
+                    </div>
+                </div>
+
+                <div class="stat-card tcp">
+                    <div class="stat-header">
+                        <span class="stat-title">TCP Traffic</span>
+                        <span class="stat-icon"><i class="fas fa-link"></i></span>
+                    </div>
+                    <div class="stat-value" id="tcp-count">0</div>
+                    <div class="stat-percentage" id="tcp-percent">0%</div>
+                </div>
+
+                <div class="stat-card udp">
+                    <div class="stat-header">
+                        <span class="stat-title">UDP Traffic</span>
+                        <span class="stat-icon"><i class="fas fa-bolt"></i></span>
+                    </div>
+                    <div class="stat-value" id="udp-count">0</div>
+                    <div class="stat-percentage" id="udp-percent">0%</div>
+                </div>
+
+                <div class="stat-card icmp">
+                    <div class="stat-header">
+                        <span class="stat-title">ICMP Traffic</span>
+                        <span class="stat-icon"><i class="fas fa-exchange-alt"></i></span>
+                    </div>
+                    <div class="stat-value" id="icmp-count">0</div>
+                    <div class="stat-percentage" id="icmp-percent">0%</div>
+                </div>
+            </div>
+
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h3><i class="fas fa-chart-line"></i> Traffic Over Time</h3>
+                    <div class="chart-container">
+                        <canvas id="traffic-chart"></canvas>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <h3><i class="fas fa-chart-pie"></i> Protocol Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="protocol-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="packet-log-section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-stream"></i> Live Packet Stream</h3>
+                        <div class="section-controls">
+                            <input type="text" class="search-box" id="search-box" placeholder="Search packets...">
+                            <button class="control-btn" id="pause-btn"><i class="fas fa-pause"></i> Pause</button>
+                            <button class="control-btn" id="clear-btn"><i class="fas fa-trash"></i> Clear</button>
+                            <button class="control-btn" id="export-btn"><i class="fas fa-download"></i> Export</button>
+                        </div>
+                    </div>
+
+                    <div class="log-container">
+                        <table id="packet-log">
+                            <thead>
+                                <tr>
+                                    <th data-sort="time">Time <i class="fas fa-sort"></i></th>
+                                    <th data-sort="protocol">Protocol <i class="fas fa-sort"></i></th>
+                                    <th data-sort="source">Source <i class="fas fa-sort"></i></th>
+                                    <th data-sort="destination">Destination <i class="fas fa-sort"></i></th>
+                                    <th data-sort="type">Type <i class="fas fa-sort"></i></th>
+                                    <th data-sort="size">Size <i class="fas fa-sort"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Packet rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="alerts-section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-exclamation-circle"></i> Security Alerts</h3>
+                        <div class="alert-controls">
+                            <select id="alert-filter">
+                                <option value="all">All Alerts</option>
+                                <option value="high">High Priority</option>
+                                <option value="medium">Medium Priority</option>
+                                <option value="low">Low Priority</option>
+                            </select>
+                            <button class="control-btn small" id="clear-alerts-btn"><i class="fas fa-broom"></i>
+                                Clear</button>
+                        </div>
+                    </div>
+
+                    <div class="alerts-container">
+                        <div class="no-alerts" id="no-alerts">
+                            <div class="no-alerts-icon"><i class="fas fa-check-circle"></i></div>
+                            <p>All clear! No suspicious activity detected.</p>
+                        </div>
+                        <div class="alerts-list" id="alerts-list">
+                            <!-- Alert items will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div class="tab-content" id="analytics-tab">
+            <div class="analytics-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 1.75rem;">
+                <div class="analytics-card">
+                    <h3><i class="fas fa-chart-line"></i> Traffic Over Time</h3>
+                    <div class="chart-container">
+                        <canvas id="analytics-traffic-chart"></canvas>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <h3><i class="fas fa-chart-pie"></i> Protocol Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="analytics-protocol-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="analytics-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 1.75rem;">
+                <div class="analytics-card">
+                    <h3><i class="fas fa-chart-bar"></i> Top Source IPs</h3>
+                    <div class="chart-container">
+                        <canvas id="source-ip-chart"></canvas>
+                    </div>
+                </div>
+                <div class="analytics-card">
+                    <h3><i class="fas fa-chart-bar"></i> Top Destination IPs</h3>
+                    <div class="chart-container">
+                        <canvas id="destination-ip-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="analytics-grid" style="grid-template-columns: 1fr; margin-bottom: 1.75rem;">
+                <div class="analytics-card">
+                    <h3><i class="fas fa-network-wired"></i> Traffic Flow</h3>
+                    <div class="chart-container">
+                        <canvas id="traffic-flow-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Tab -->
+        <div class="tab-content" id="alerts-tab">
+            <div class="content-grid" style="grid-template-columns: 1fr; padding: 1.75rem;">
+                <div class="alerts-section" style="min-height: 70vh;">
+                    <div class="section-header">
+                        <h3><i class="fas fa-exclamation-circle"></i> Security Alerts</h3>
+                        <div class="alert-controls">
+                            <select id="alerts-tab-filter">
+                                <option value="all">All Alerts</option>
+                                <option value="high">High Priority</option>
+                                <option value="medium">Medium Priority</option>
+                                <option value="low">Low Priority</option>
+                            </select>
+                            <button class="control-btn" id="alerts-tab-clear-btn"><i class="fas fa-broom"></i> Clear
+                                All</button>
+                        </div>
+                    </div>
+
+                    <div class="alerts-container">
+                        <div class="no-alerts" id="alerts-tab-no-alerts">
+                            <div class="no-alerts-icon"><i class="fas fa-check-circle"></i></div>
+                            <p>All clear! No suspicious activity detected.</p>
+                        </div>
+                        <div class="alerts-list" id="alerts-tab-list">
+                            <!-- Alert items will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Tab -->
+        <div class="tab-content" id="logs-tab">
+            <div class="content-grid" style="grid-template-columns: 1fr; padding: 1.75rem;">
+                <div class="packet-log-section" style="min-height: 70vh;">
+                    <div class="section-header">
+                        <h3><i class="fas fa-clipboard-list"></i> Packet Logs</h3>
+                        <div class="section-controls">
+                            <input type="text" class="search-box" id="logs-search-box" placeholder="Search packets...">
+                            <button class="control-btn" id="logs-pause-btn"><i class="fas fa-pause"></i> Pause</button>
+                            <button class="control-btn" id="logs-clear-btn"><i class="fas fa-trash"></i> Clear</button>
+                            <button class="control-btn" id="logs-export-btn"><i class="fas fa-download"></i>
+                                Export</button>
+                        </div>
+                    </div>
+
+                    <div class="log-container">
+                        <table id="logs-packet-log">
+                            <thead>
+                                <tr>
+                                    <th data-sort="time">Time <i class="fas fa-sort"></i></th>
+                                    <th data-sort="protocol">Protocol <i class="fas fa-sort"></i></th>
+                                    <th data-sort="source">Source <i class="fas fa-sort"></i></th>
+                                    <th data-sort="destination">Destination <i class="fas fa-sort"></i></th>
+                                    <th data-sort="type">Type <i class="fas fa-sort"></i></th>
+                                    <th data-sort="size">Size <i class="fas fa-sort"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Packet rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div class="tab-content" id="settings-tab">
+            <div class="content-grid" style="grid-template-columns: 1fr; padding: 1.75rem;">
+                <div class="packet-log-section" style="min-height: 70vh;">
+                    <div class="section-header">
+                        <h3><i class="fas fa-cog"></i> Settings</h3>
+                    </div>
+                    <div style="padding: 2.5rem;">
+                        <div class="settings-group">
+                            <h4><i class="fas fa-sliders-h"></i> General Settings</h4>
+                            <div class="setting-item">
+                                <label for="auto-refresh">Auto Refresh</label>
+                                <input type="checkbox" id="auto-refresh" checked>
+                            </div>
+                            <div class="setting-item">
+                                <label for="alert-sound">Alert Sound</label>
+                                <input type="checkbox" id="alert-sound" checked>
+                            </div>
+                            <div class="setting-item">
+                                <label for="max-packets">Max Packets to Display</label>
+                                <select id="max-packets">
+                                    <option value="100">100</option>
+                                    <option value="200" selected>200</option>
+                                    <option value="500">500</option>
+                                    <option value="1000">1000</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="settings-group" style="margin-top: 2.5rem;">
+                            <h4><i class="fas fa-chart-bar"></i> Display Settings</h4>
+                            <div class="setting-item">
+                                <label for="theme">Theme</label>
+                                <select id="theme">
+                                    <option value="dark" selected>Dark</option>
+                                    <option value="light">Light</option>
+                                    <option value="auto">Auto</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label for="chart-type">Chart Type</label>
+                                <select id="chart-type">
+                                    <option value="line" selected>Line</option>
+                                    <option value="bar">Bar</option>
+                                    <option value="area">Area</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="settings-group" style="margin-top: 2.5rem;">
+                            <h4><i class="fas fa-bell"></i> Alert Settings</h4>
+                            <div class="setting-item">
+                                <label for="high-alerts">High Priority Alerts</label>
+                                <input type="checkbox" id="high-alerts" checked>
+                            </div>
+                            <div class="setting-item">
+                                <label for="medium-alerts">Medium Priority Alerts</label>
+                                <input type="checkbox" id="medium-alerts" checked>
+                            </div>
+                            <div class="setting-item">
+                                <label for="low-alerts">Low Priority Alerts</label>
+                                <input type="checkbox" id="low-alerts">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-mode" id="demo-mode">
+        <i class="fas fa-vial"></i> Demo Mode Active
+    </div>
+
+    <script>
+        // ===== ENHANCED NETWORK MONITOR WITH ANALYTICS =====
+
+        // ===== STATE VARIABLES =====
+        let counts = { total: 0, TCP: 0, UDP: 0, ICMP: 0 };
+        let alertCount = 0;
+        let isPaused = false;
+        let allPackets = [];
+        let allAlerts = [];
+        let packetsThisMinute = 0;
+        let lastMinuteReset = Date.now();
+        let sortOrder = {};
+        let searchTerm = '';
+        let demoMode = true;
+        let ws = null;
+        let demoInterval = null;
+
+        // Analytics data
+        let trafficData = Array(60).fill(0); // Last 60 seconds
+        let protocolDistribution = { TCP: 0, UDP: 0, ICMP: 0 };
+        let sourceIPs = {};
+        let destinationIPs = {};
+        let trafficFlow = { inbound: 0, outbound: 0 };
+
+        // ===== CHART INSTANCES =====
+        let trafficChart, protocolChart, analyticsTrafficChart, analyticsProtocolChart;
+        let sourceIPChart, destinationIPChart, trafficFlowChart;
+
+        // ===== DOM ELEMENTS =====
+        const statusDiv = document.getElementById("status");
+        const statusDot = document.getElementById("status-dot");
+        const totalPacketsEl = document.getElementById("total-packets");
+        const tcpCountEl = document.getElementById("tcp-count");
+        const udpCountEl = document.getElementById("udp-count");
+        const icmpCountEl = document.getElementById("icmp-count");
+        const tcpPercentEl = document.getElementById("tcp-percent");
+        const udpPercentEl = document.getElementById("udp-percent");
+        const icmpPercentEl = document.getElementById("icmp-percent");
+        const packetsPerMinEl = document.getElementById("packets-per-min");
+        const packetLogBody = document.querySelector("#packet-log tbody");
+        const logsPacketLogBody = document.querySelector("#logs-packet-log tbody");
+        const alertsList = document.getElementById("alerts-list");
+        const alertsTabList = document.getElementById("alerts-tab-list");
+        const noAlertsEl = document.getElementById("no-alerts");
+        const noAlertsTabEl = document.getElementById("alerts-tab-no-alerts");
+        const alertCountEl = document.getElementById("alert-count");
+        const pauseBtn = document.getElementById("pause-btn");
+        const logsPauseBtn = document.getElementById("logs-pause-btn");
+        const clearBtn = document.getElementById("clear-btn");
+        const logsClearBtn = document.getElementById("logs-clear-btn");
+        const exportBtn = document.getElementById("export-btn");
+        const logsExportBtn = document.getElementById("logs-export-btn");
+        const clearAlertsBtn = document.getElementById("clear-alerts-btn");
+        const clearAlertsTabBtn = document.getElementById("alerts-tab-clear-btn");
+        const alertFilter = document.getElementById("alert-filter");
+        const alertTabFilter = document.getElementById("alerts-tab-filter");
+        const currentTimeEl = document.getElementById("current-time");
+        const searchBox = document.getElementById("search-box");
+        const logsSearchBox = document.getElementById("logs-search-box");
+        const demoModeEl = document.getElementById("demo-mode");
+
+        // Tab elements
+        const tabContents = document.querySelectorAll('.tab-content');
+        const navItems = document.querySelectorAll('.nav-item');
+
+        // ===== UTILITY FUNCTIONS =====
+        function showNotification(message, isError = false) {
+            // Remove existing notifications
+            document.querySelectorAll('.notification').forEach(n => n.remove());
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${isError ? 'error' : ''}`;
+            notification.innerHTML = `<i class="fas fa-${isError ? 'exclamation-triangle' : 'check-circle'}"></i> ${message}`;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideInNotification 0.3s ease-out reverse';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        function updateTime() {
+            const now = new Date();
+            currentTimeEl.textContent = now.toLocaleTimeString();
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString();
+        }
+
+        function generateRandomIP() {
+            return `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+        }
+
+        function generateDemoPacket() {
+            const protocols = ['TCP', 'UDP', 'ICMP'];
+            const protocol = protocols[Math.floor(Math.random() * protocols.length)];
+            const trafficTypes = ['HTTP', 'HTTPS', 'DNS', 'SSH', 'FTP'];
+
+            return {
+                protocol: protocol,
+                src_ip: generateRandomIP(),
+                dst_ip: generateRandomIP(),
+                src_port: Math.floor(Math.random() * 65535),
+                dst_port: Math.floor(Math.random() * 65535),
+                size: Math.floor(Math.random() * 1500) + 100,
+                traffic_type: trafficTypes[Math.floor(Math.random() * trafficTypes.length)],
+                timestamp: new Date().toLocaleTimeString()
+            };
+        }
+
+        function generateDemoAlert() {
+            const alertTypes = [
+                { type: "Port Scan", severity: "high", message: "Multiple connection attempts detected on various ports" },
+                { type: "DDoS Attack", severity: "high", message: "High volume of traffic from single source IP" },
+                { type: "Suspicious Activity", severity: "medium", message: "Unusual traffic pattern detected" },
+                { type: "Protocol Anomaly", severity: "medium", message: "Unexpected protocol usage detected" },
+                { type: "Information Leak", severity: "low", message: "Potential data exfiltration detected" }
+            ];
+
+            const alert = alertTypes[Math.floor(Math.random() * alertTypes.length)];
+            return {
+                alert_type: alert.type,
+                severity: alert.severity,
+                message: alert.message,
+                timestamp: new Date().toLocaleTimeString()
+            };
+        }
+
+        // ===== CHART FUNCTIONS =====
+        function initializeCharts() {
+            // Traffic Over Time Chart
+            const trafficCtx = document.getElementById('traffic-chart').getContext('2d');
+            trafficChart = new Chart(trafficCtx, {
+                type: 'line',
+                data: {
+                    labels: Array(60).fill('').map((_, i) => `${i}s`),
+                    datasets: [{
+                        label: 'Packets/sec',
+                        data: trafficData,
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Protocol Distribution Chart
+            const protocolCtx = document.getElementById('protocol-chart').getContext('2d');
+            protocolChart = new Chart(protocolCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['TCP', 'UDP', 'ICMP'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            'rgba(138, 95, 255, 0.8)',
+                            'rgba(0, 255, 136, 0.8)',
+                            'rgba(255, 165, 0, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(138, 95, 255, 1)',
+                            'rgba(0, 255, 136, 1)',
+                            'rgba(255, 165, 0, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Analytics Tab Charts
+            const analyticsTrafficCtx = document.getElementById('analytics-traffic-chart').getContext('2d');
+            analyticsTrafficChart = new Chart(analyticsTrafficCtx, {
+                type: 'line',
+                data: {
+                    labels: Array(60).fill('').map((_, i) => `${i}s`),
+                    datasets: [{
+                        label: 'Packets/sec',
+                        data: trafficData,
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            const analyticsProtocolCtx = document.getElementById('analytics-protocol-chart').getContext('2d');
+            analyticsProtocolChart = new Chart(analyticsProtocolCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['TCP', 'UDP', 'ICMP'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            'rgba(138, 95, 255, 0.8)',
+                            'rgba(0, 255, 136, 0.8)',
+                            'rgba(255, 165, 0, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(138, 95, 255, 1)',
+                            'rgba(0, 255, 136, 1)',
+                            'rgba(255, 165, 0, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Source IP Chart
+            const sourceIPCtx = document.getElementById('source-ip-chart').getContext('2d');
+            sourceIPChart = new Chart(sourceIPCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Packets',
+                        data: [],
+                        backgroundColor: 'rgba(67, 97, 238, 0.8)',
+                        borderColor: 'rgba(67, 97, 238, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Destination IP Chart
+            const destinationIPCtx = document.getElementById('destination-ip-chart').getContext('2d');
+            destinationIPChart = new Chart(destinationIPCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Packets',
+                        data: [],
+                        backgroundColor: 'rgba(0, 255, 136, 0.8)',
+                        borderColor: 'rgba(0, 255, 136, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Traffic Flow Chart
+            const trafficFlowCtx = document.getElementById('traffic-flow-chart').getContext('2d');
+            trafficFlowChart = new Chart(trafficFlowCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Inbound', 'Outbound'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: [
+                            'rgba(67, 97, 238, 0.8)',
+                            'rgba(0, 255, 136, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(67, 97, 238, 1)',
+                            'rgba(0, 255, 136, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            // Update traffic chart
+            trafficChart.data.datasets[0].data = trafficData;
+            trafficChart.update('none');
+
+            analyticsTrafficChart.data.datasets[0].data = trafficData;
+            analyticsTrafficChart.update('none');
+
+            // Update protocol distribution
+            const total = counts.TCP + counts.UDP + counts.ICMP;
+            if (total > 0) {
+                protocolChart.data.datasets[0].data = [
+                    counts.TCP, counts.UDP, counts.ICMP
+                ];
+                protocolChart.update('none');
+
+                analyticsProtocolChart.data.datasets[0].data = [
+                    counts.TCP, counts.UDP, counts.ICMP
+                ];
+                analyticsProtocolChart.update('none');
+            }
+
+            // Update source IP chart (top 5)
+            const topSourceIPs = Object.entries(sourceIPs)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            sourceIPChart.data.labels = topSourceIPs.map(ip => ip[0]);
+            sourceIPChart.data.datasets[0].data = topSourceIPs.map(ip => ip[1]);
+            sourceIPChart.update('none');
+
+            // Update destination IP chart (top 5)
+            const topDestinationIPs = Object.entries(destinationIPs)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            destinationIPChart.data.labels = topDestinationIPs.map(ip => ip[0]);
+            destinationIPChart.data.datasets[0].data = topDestinationIPs.map(ip => ip[1]);
+            destinationIPChart.update('none');
+
+            // Update traffic flow
+            trafficFlowChart.data.datasets[0].data = [
+                trafficFlow.inbound, trafficFlow.outbound
+            ];
+            trafficFlowChart.update('none');
+        }
+
+        // ===== WEBSOCKET CONNECTION =====
+        function connectWebSocket() {
+            try {
+                // ...existing code...
+                ws = new WebSocket("ws://127.0.0.1:8765");
+                // ...existing code...
+                ws.onopen = () => {
+                    console.log("✅ Connected to sniffer backend.");
+                    statusDiv.textContent = "Connected";
+                    statusDot.className = "status-indicator connected";
+                    demoMode = false;
+                    demoModeEl.style.display = 'none';
+                    showNotification("Connected to NetGuard Pro successfully!");
+
+                    // Stop demo mode
+                    if (demoInterval) {
+                        clearInterval(demoInterval);
+                        demoInterval = null;
+                    }
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+
+                        if (message.type === "packet" && !isPaused) {
+                            handlePacket(message.data);
+                        } else if (message.type === "alert") {
+                            handleAlert(message);
+                        } else if (message.type === "status") {
+                            showNotification(message.message);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing WebSocket message:", e);
+                    }
+                };
+
+                ws.onclose = () => {
+                    console.log("❌ Disconnected from sniffer backend.");
+                    statusDiv.textContent = "Disconnected";
+                    statusDot.className = "status-indicator disconnected";
+
+                    // Fall back to demo mode
+                    if (!demoMode) {
+                        demoMode = true;
+                        demoModeEl.style.display = 'flex';
+                        startDemoMode();
+                        showNotification("Connection lost. Running in demo mode.", true);
+                    }
+
+                    // Try to reconnect after 5 seconds
+                    setTimeout(connectWebSocket, 5000);
+                };
+
+                ws.onerror = (error) => {
+                    console.error("WebSocket Error:", error);
+                    statusDiv.textContent = "Error";
+                    statusDot.className = "status-indicator error";
+
+                    if (!demoMode) {
+                        demoMode = true;
+                        demoModeEl.style.display = 'flex';
+                        startDemoMode();
+                        showNotification("WebSocket connection error. Running in demo mode.", true);
+                    }
+                };
+            } catch (error) {
+                console.error("Failed to create WebSocket:", error);
+                if (!demoMode) {
+                    demoMode = true;
+                    demoModeEl.style.display = 'flex';
+                    startDemoMode();
+                }
+            }
+        }
+
+        // ===== DEMO MODE =====
+        function startDemoMode() {
+            if (demoInterval) clearInterval(demoInterval);
+
+            demoInterval = setInterval(() => {
+                if (!isPaused) {
+                    // Generate random packets
+                    const packetCount = Math.floor(Math.random() * 3) + 1;
+                    for (let i = 0; i < packetCount; i++) {
+                        handlePacket(generateDemoPacket());
+                    }
+
+                    // Occasionally generate alerts (5% chance)
+                    if (Math.random() < 0.05) {
+                        handleAlert(generateDemoAlert());
+                    }
+                }
+            }, 800);
+        }
+
+        // ===== PACKET HANDLING =====
+        function handlePacket(packet) {
+            // Update counters
+            counts.total++;
+            if (packet.protocol in counts) {
+                counts[packet.protocol]++;
+            }
+
+            // Track packets per minute
+            const now = Date.now();
+            if (now - lastMinuteReset > 60000) {
+                packetsThisMinute = 0;
+                lastMinuteReset = now;
+            }
+            packetsThisMinute++;
+
+            // Update analytics data
+            const currentSecond = Math.floor(now / 1000) % 60;
+            trafficData[currentSecond] = (trafficData[currentSecond] || 0) + 1;
+
+            // Update source and destination IP counts
+            sourceIPs[packet.src_ip] = (sourceIPs[packet.src_ip] || 0) + 1;
+            destinationIPs[packet.dst_ip] = (destinationIPs[packet.dst_ip] || 0) + 1;
+
+            // Update traffic flow (simplified: if source IP starts with 192.168, it's outbound)
+            if (packet.src_ip.startsWith('192.168')) {
+                trafficFlow.outbound++;
+            } else {
+                trafficFlow.inbound++;
+            }
+
+            // Store packet for export and search
+            const packetWithId = {
+                id: Date.now() + Math.random(),
+                timestamp: new Date().toLocaleTimeString(),
+                ...packet
+            };
+            allPackets.unshift(packetWithId);
+
+            // Keep only last 500 packets in memory
+            if (allPackets.length > 500) {
+                allPackets.pop();
+            }
+
+            updateStats();
+            addPacketToTable(packetWithId);
+            updateCharts();
+        }
+
+        // ===== ALERT HANDLING =====
+        function handleAlert(alert) {
+            alertCount++;
+            alertCountEl.textContent = alertCount;
+            noAlertsEl.style.display = 'none';
+            noAlertsTabEl.style.display = 'none';
+
+            // Store alert
+            const alertData = {
+                ...alert,
+                id: Date.now() + Math.random(),
+                timestamp: alert.timestamp || new Date().toLocaleTimeString()
+            };
+            allAlerts.unshift(alertData);
+
+            // Keep only last 50 alerts
+            if (allAlerts.length > 50) {
+                allAlerts.pop();
+            }
+
+            renderAlerts();
+
+            // Only show notification for high/medium alerts in demo mode
+            if (!demoMode || alert.severity !== 'low') {
+                showNotification(`Security Alert: ${alert.alert_type}`, alert.severity === 'high');
+            }
+        }
+
+        // ===== STATISTICS UPDATE =====
+        function updateStats() {
+            totalPacketsEl.textContent = formatNumber(counts.total);
+            tcpCountEl.textContent = formatNumber(counts.TCP);
+            udpCountEl.textContent = formatNumber(counts.UDP);
+            icmpCountEl.textContent = formatNumber(counts.ICMP);
+            packetsPerMinEl.textContent = formatNumber(packetsThisMinute);
+
+            // Calculate percentages
+            const tcpPercent = counts.total > 0 ? ((counts.TCP / counts.total) * 100).toFixed(1) : 0;
+            const udpPercent = counts.total > 0 ? ((counts.UDP / counts.total) * 100).toFixed(1) : 0;
+            const icmpPercent = counts.total > 0 ? ((counts.ICMP / counts.total) * 100).toFixed(1) : 0;
+
+            tcpPercentEl.textContent = tcpPercent + '%';
+            udpPercentEl.textContent = udpPercent + '%';
+            icmpPercentEl.textContent = icmpPercent + '%';
+        }
+
+        // ===== PACKET TABLE FUNCTIONS =====
+        function addPacketToTable(packet) {
+            // Check if packet matches search
+            if (searchTerm && !matchesSearch(packet, searchTerm)) {
+                return;
+            }
+
+            // Add to dashboard table
+            addPacketToSpecificTable(packet, packetLogBody);
+
+            // Add to logs table
+            addPacketToSpecificTable(packet, logsPacketLogBody);
+        }
+
+        function addPacketToSpecificTable(packet, tableBody) {
+            const newRow = tableBody.insertRow(0);
+            newRow.className = 'new-row';
+            newRow.setAttribute('data-packet-id', packet.id);
+
+            newRow.innerHTML = `
+                <td class="time-cell" data-sort-value="${new Date().getTime()}">${packet.timestamp}</td>
+                <td><span class="protocol-badge ${packet.protocol.toLowerCase()}">${packet.protocol}</span></td>
+                <td class="ip-cell">${packet.src_ip}:${packet.src_port}</td>
+                <td class="ip-cell">${packet.dst_ip}:${packet.dst_port}</td>
+                <td class="type-cell">${packet.traffic_type || packet.protocol}</td>
+                <td class="size-cell" data-sort-value="${packet.size}">${packet.size} B</td>
+            `;
+
+            // Remove highlight after animation
+            setTimeout(() => newRow.classList.remove('new-row'), 1500);
+
+            // Limit table rows for performance
+            const maxRows = 100;
+            while (tableBody.rows.length > maxRows) {
+                tableBody.deleteRow(tableBody.rows.length - 1);
+            }
+
+            // Auto-scroll to bottom when new packets arrive, only if user is already at the bottom
+            const logContainer = tableBody.closest('.log-container');
+            if (logContainer && !isPaused) {
+                const isAtBottom = logContainer.scrollHeight - logContainer.scrollTop <= logContainer.clientHeight + 10;
+                if (isAtBottom) {
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                }
+            }
+        }
+
+        function matchesSearch(packet, term) {
+            const searchStr = term.toLowerCase();
+            return (
+                packet.src_ip.toLowerCase().includes(searchStr) ||
+                packet.dst_ip.toLowerCase().includes(searchStr) ||
+                packet.protocol.toLowerCase().includes(searchStr) ||
+                (packet.traffic_type && packet.traffic_type.toLowerCase().includes(searchStr)) ||
+                packet.src_port.toString().includes(searchStr) ||
+                packet.dst_port.toString().includes(searchStr)
+            );
+        }
+
+        function filterPacketsTable(tableBody, searchBox) {
+            const rows = Array.from(tableBody.getElementsByTagName('tr'));
+            let visibleCount = 0;
+
+            // Remove existing "no results" message
+            const existingMessage = tableBody.parentNode.querySelector('#no-search-results');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+
+            rows.forEach(row => {
+                if (row.id === 'no-search-results') {
+                    row.remove();
+                    return;
+                }
+
+                const currentSearchTerm = searchBox.value;
+
+                if (!currentSearchTerm) {
+                    row.style.display = '';
+                    visibleCount++;
+                    return;
+                }
+
+                const cells = row.getElementsByTagName('td');
+                let matches = false;
+
+                for (let cell of cells) {
+                    if (cell.textContent.toLowerCase().includes(currentSearchTerm.toLowerCase())) {
+                        matches = true;
+                        break;
+                    }
+                }
+
+                row.style.display = matches ? '' : 'none';
+                if (matches) visibleCount++;
+            });
+
+            // Show message if no results
+            if (searchBox.value && visibleCount === 0) {
+                const messageRow = tableBody.insertRow(0);
+                messageRow.id = 'no-search-results';
+                messageRow.innerHTML = `<td colspan="6" style="text-align: center; padding: 2rem; opacity: 0.6;">No packets match "${searchBox.value}"</td>`;
+            }
+        }
+
+        function sortTable(column, table) {
+            const tableBody = table.querySelector('tbody');
+            const rows = Array.from(tableBody.rows);
+            const isAsc = sortOrder[column] !== 'asc';
+            sortOrder[column] = isAsc ? 'asc' : 'desc';
+
+            // Remove "no results" message if present
+            const messageRow = tableBody.querySelector('#no-search-results');
+            if (messageRow) {
+                messageRow.remove();
+            }
+
+            rows.sort((a, b) => {
+                if (a.id === 'no-search-results' || b.id === 'no-search-results') return 0;
+
+                let aVal, bVal;
+
+                switch (column) {
+                    case 'time':
+                        aVal = a.cells[0].getAttribute('data-sort-value') || a.cells[0].textContent;
+                        bVal = b.cells[0].getAttribute('data-sort-value') || b.cells[0].textContent;
+                        break;
+                    case 'protocol':
+                        aVal = a.cells[1].textContent;
+                        bVal = b.cells[1].textContent;
+                        break;
+                    case 'source':
+                        aVal = a.cells[2].textContent;
+                        bVal = b.cells[2].textContent;
+                        break;
+                    case 'destination':
+                        aVal = a.cells[3].textContent;
+                        bVal = b.cells[3].textContent;
+                        break;
+                    case 'type':
+                        aVal = a.cells[4].textContent;
+                        bVal = b.cells[4].textContent;
+                        break;
+                    case 'size':
+                        aVal = parseInt(a.cells[5].getAttribute('data-sort-value')) || 0;
+                        bVal = parseInt(b.cells[5].getAttribute('data-sort-value')) || 0;
+                        break;
+                    default:
+                        return 0;
+                }
+
+                if (aVal < bVal) return isAsc ? -1 : 1;
+                if (aVal > bVal) return isAsc ? 1 : -1;
+                return 0;
+            });
+
+            // Clear table and re-add sorted rows
+            tableBody.innerHTML = '';
+            rows.forEach(row => tableBody.appendChild(row));
+
+            // Update sort icons
+            table.querySelectorAll('th i').forEach(icon => {
+                icon.className = 'fas fa-sort';
+            });
+
+            const header = table.querySelector(`th[data-sort="${column}"] i`);
+            if (header) {
+                header.className = isAsc ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            }
+        }
+
+        // ===== ALERT FUNCTIONS =====
+        function renderAlerts() {
+            const filterValue = alertFilter.value;
+            const filteredAlerts = allAlerts.filter(alert => {
+                if (filterValue === 'all') return true;
+                return alert.severity === filterValue;
+            });
+
+            alertsList.innerHTML = '';
+            alertsTabList.innerHTML = '';
+
+            if (filteredAlerts.length === 0) {
+                if (allAlerts.length > 0) {
+                    alertsList.innerHTML = '<div class="no-filtered-alerts"><i class="fas fa-filter"></i> No alerts match the current filter.</div>';
+                    alertsTabList.innerHTML = '<div class="no-filtered-alerts"><i class="fas fa-filter"></i> No alerts match the current filter.</div>';
+                } else {
+                    noAlertsEl.style.display = 'block';
+                    noAlertsTabEl.style.display = 'block';
+                }
+                return;
+            }
+
+            noAlertsEl.style.display = 'none';
+            noAlertsTabEl.style.display = 'none';
+
+            filteredAlerts.forEach(alert => {
+                const alertEl = document.createElement("div");
+                alertEl.className = `alert-item severity-${alert.severity}`;
+                alertEl.innerHTML = `
+                    <div class="alert-header">
+                        <span class="alert-type"><i class="fas fa-exclamation-triangle"></i> ${alert.alert_type}</span>
+                        <span class="alert-time">${alert.timestamp}</span>
+                    </div>
+                    <div class="alert-message">${alert.message}</div>
+                `;
+                alertsList.appendChild(alertEl.cloneNode(true));
+                alertsTabList.appendChild(alertEl);
+            });
+        }
+
+        // ===== EXPORT FUNCTION =====
+        function exportData() {
+            const data = {
+                export_info: {
+                    timestamp: new Date().toISOString(),
+                    exported_by: "NetGuard Pro",
+                    version: "1.0.0",
+                    mode: demoMode ? "demo" : "live"
+                },
+                summary: {
+                    total_packets: counts.total,
+                    protocols: counts,
+                    export_duration: "Last 500 packets",
+                    alerts_count: allAlerts.length
+                },
+                packets: allPackets.slice(0, 500),
+                alerts: allAlerts
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `netguard-export-${new Date().toISOString().split('T')[0]}-${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showNotification(`Exported ${data.packets.length} packets and ${data.alerts.length} alerts successfully!`);
+        }
+
+        // ===== TAB MANAGEMENT =====
+        function switchTab(tabName) {
+            // Hide all tab contents
+            tabContents.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            // Update active nav item
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.tab === tabName) {
+                    item.classList.add('active');
+                }
+            });
+
+            showNotification(`Switched to ${tabName.charAt(0).toUpperCase() + tabName.slice(1)} view`);
+        }
+
+        // ===== CLEAR FUNCTION =====
+        function clearPacketLogs(tableBody) {
+            if (confirm('Clear all packet logs? This action cannot be undone.')) {
+                tableBody.innerHTML = '';
+                if (tableBody === packetLogBody) {
+                    // Only reset data if clearing the main table
+                    allPackets = [];
+                    counts = { total: 0, TCP: 0, UDP: 0, ICMP: 0 };
+                    trafficData = Array(60).fill(0);
+                    sourceIPs = {};
+                    destinationIPs = {};
+                    trafficFlow = { inbound: 0, outbound: 0 };
+                    updateStats();
+                    updateCharts();
+                }
+                showNotification('Packet logs cleared successfully');
+            }
+        }
+
+        function clearAlerts() {
+            if (confirm('Clear all security alerts? This action cannot be undone.')) {
+                allAlerts = [];
+                alertCount = 0;
+                alertCountEl.textContent = '0';
+                alertsList.innerHTML = '';
+                alertsTabList.innerHTML = '';
+                noAlertsEl.style.display = 'block';
+                noAlertsTabEl.style.display = 'block';
+                showNotification('Security alerts cleared successfully');
+            }
+        }
+
+        // ===== EVENT LISTENERS =====
+
+        // Navigation
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                switchTab(item.dataset.tab);
+            });
+        });
+
+        // Search functionality
+        searchBox.addEventListener('input', function () {
+            searchTerm = this.value;
+            filterPacketsTable(packetLogBody, this);
+        });
+
+        logsSearchBox.addEventListener('input', function () {
+            filterPacketsTable(logsPacketLogBody, this);
+        });
+
+        // Table sorting
+        document.querySelectorAll('#packet-log th[data-sort]').forEach(header => {
+            header.addEventListener('click', () => {
+                const column = header.getAttribute('data-sort');
+                sortTable(column, document.getElementById('packet-log'));
+            });
+        });
+
+        document.querySelectorAll('#logs-packet-log th[data-sort]').forEach(header => {
+            header.addEventListener('click', () => {
+                const column = header.getAttribute('data-sort');
+                sortTable(column, document.getElementById('logs-packet-log'));
+            });
+        });
+
+        // Control buttons
+        pauseBtn.addEventListener('click', () => {
+            isPaused = !isPaused;
+            pauseBtn.innerHTML = isPaused ? '<i class="fas fa-play"></i> Resume' : '<i class="fas fa-pause"></i> Pause';
+            pauseBtn.classList.toggle('paused', isPaused);
+            logsPauseBtn.innerHTML = isPaused ? '<i class="fas fa-play"></i> Resume' : '<i class="fas fa-pause"></i> Pause';
+            logsPauseBtn.classList.toggle('paused', isPaused);
+            showNotification(isPaused ? 'Packet capture paused' : 'Packet capture resumed');
+        });
+
+        logsPauseBtn.addEventListener('click', () => {
+            isPaused = !isPaused;
+            pauseBtn.innerHTML = isPaused ? '<i class="fas fa-play"></i> Resume' : '<i class="fas fa-pause"></i> Pause';
+            pauseBtn.classList.toggle('paused', isPaused);
+            logsPauseBtn.innerHTML = isPaused ? '<i class="fas fa-play"></i> Resume' : '<i class="fas fa-pause"></i> Pause';
+            logsPauseBtn.classList.toggle('paused', isPaused);
+            showNotification(isPaused ? 'Packet capture paused' : 'Packet capture resumed');
+        });
+
+        clearBtn.addEventListener('click', () => clearPacketLogs(packetLogBody));
+        logsClearBtn.addEventListener('click', () => clearPacketLogs(logsPacketLogBody));
+
+        exportBtn.addEventListener('click', exportData);
+        logsExportBtn.addEventListener('click', exportData);
+
+        clearAlertsBtn.addEventListener('click', clearAlerts);
+        clearAlertsTabBtn.addEventListener('click', clearAlerts);
+
+        alertFilter.addEventListener('change', renderAlerts);
+        alertTabFilter.addEventListener('change', renderAlerts);
+
+        // ===== INITIALIZATION =====
+
+        // Initialize charts
+        initializeCharts();
+
+        // Start time display
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Auto-refresh stats every second
+        setInterval(() => {
+            const now = Date.now();
+            if (now - lastMinuteReset > 60000) {
+                packetsThisMinute = 0;
+                lastMinuteReset = now;
+                packetsPerMinEl.textContent = '0';
+            }
+        }, 1000);
+
+        // Initialize demo mode and try to connect to WebSocket
+        demoModeEl.style.display = 'flex';
+        startDemoMode();
+        connectWebSocket();
+
+        console.log("🚀 NetGuard Pro Dashboard loaded successfully!");
+        console.log("💡 Features available:");
+        console.log("   • Real-time packet monitoring");
+        console.log("   • Advanced analytics with charts");
+        console.log("   • Demo mode with simulated traffic");
+        console.log("   • Search and filter packets");
+        console.log("   • Sort table columns");
+        console.log("   • Export data to JSON");
+        console.log("   • Security alerts");
+        console.log("   • Pause/Resume capture");
+        console.log("   • Clear logs and alerts");
+        console.log("   • Tab-based navigation");
+    </script>
+</body>
+
+</html>
